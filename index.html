@@ -26,8 +26,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      max-width: 50vw;
-      max-height: 50vh;
+      max-width: 75vw;
+      max-height: 75vh;
       opacity: 0;
       transition: opacity 2s ease-in-out;
       z-index: 1;
@@ -70,7 +70,7 @@
   resize();
 
   let t = 0;
-  const duration = 632;  // duration in seconds
+  const duration = 632;
   const endTime = Date.now() + duration * 1000;
 
   function drawTunnel() {
@@ -114,26 +114,25 @@
   images.sort(() => Math.random() - 0.5);
 
   let current = 0;
-  let visibleDuration = 10000;
   let fadeDuration = 2000;
-  let totalDuration = 632000;
+  let visibleDuration = 20000;
 
-  function cycleImages() {
-    if (current < images.length) {
+  function cycleImages() {{
+    if (current < images.length) {{
       let img = images[current];
       img.classList.add('visible');
-      setTimeout(() => {
+      setTimeout(() => {{
         img.classList.remove('visible');
         current++;
         setTimeout(cycleImages, fadeDuration);
-      }, visibleDuration);
-    } else {
+      }}, visibleDuration);
+    }} else {{
       const sunset = document.getElementById('img18');
-      setTimeout(() => {
+      setTimeout(() => {{
         sunset.classList.add('visible');
-      }, totalDuration - 20000);
-    }
-  }
+      }}, {sunset_duration * 1000});
+    }}
+  }}
 
   cycleImages();
 </script>
