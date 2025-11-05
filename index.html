@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Trippy Visualizer</title>
+  <title>Trippy Visualizer with Controls</title>
   <style>
     html, body {
       margin: 0;
@@ -35,10 +35,24 @@
     .visible {
       opacity: 1 !important;
     }
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    button {
+      font-size: 16px;
+      margin: 0 5px;
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <!-- Image Elements -->
   <img class="photo" id="img1" src="img1.jpg">
   <img class="photo" id="img2" src="img2.jpg">
   <img class="photo" id="img3" src="img3.jpg">
@@ -58,6 +72,14 @@
   <img class="photo" id="img17" src="img17.jpg">
   <img class="photo" id="img18" src="sunset.jpg">
 
+  <!-- Control Buttons -->
+  <div id="controls">
+    <button onclick="togglePlay()"><span id="playLabel">Pause</span></button>
+    <button onclick="rewind()">⏮ Rewind</button>
+    <button onclick="skip()">⏭ Skip</button>
+    <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+  </div>
+
 <script>
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
@@ -70,12 +92,10 @@
   resize();
 
   let t = 0;
-  const duration = 632;
-  const endTime = Date.now() + duration * 1000;
+  let animating = true;
 
   function drawTunnel() {
-    if (Date.now() > endTime) return;
-
+    if (!animating) return;
     const w = canvas.width;
     const h = canvas.height;
     const imageData = ctx.createImageData(w, h);
@@ -87,13 +107,10 @@
         let dy = y - h / 2;
         let dist = Math.sqrt(dx * dx + dy * dy);
         let angle = Math.atan2(dy, dx);
-
         let swirl = Math.sin(dist * 0.05 - t) + Math.cos(angle * 6 + t * 0.3);
-
         let r = Math.floor(90 * (Math.sin(swirl + t) + 1));
         let g = Math.floor(90 * (Math.sin(swirl + t + 2) + 1));
         let b = Math.floor(90 * (Math.sin(swirl + t + 4) + 1));
-
         const index = (x + y * w) * 4;
         data[index] = r;
         data[index + 1] = g;
@@ -109,30 +126,60 @@
 
   drawTunnel();
 
-  const imageIds = ["img1", "img2", "img3", "img4", "img5", "img6", "img7", "img8", "img9", "img10", "img11", "img12", "img13", "img14", "img15", "img16", "img17"];
-  const images = imageIds.map(id => document.getElementById(id));
-  images.sort(() => Math.random() - 0.5);
+  function togglePlay() {
+    animating = !animating;
+    document.getElementById("playLabel").innerText = animating ? "Pause" : "Play";
+    if (animating) {
+      drawTunnel();
+      cycleImages();
+    }
+  }
 
+  function toggleFullscreen() {
+    const elem = document.documentElement;
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  const images = [...Array(17).keys()].map(i => document.getElementById(`img${i + 1}`));
+  images.sort(() => Math.random() - 0.5);
+  let sunset = document.getElementById("img18");
   let current = 0;
   let fadeDuration = 2000;
   let visibleDuration = 20000;
+  let cycleTimer;
 
-  function cycleImages() {{
-    if (current < images.length) {{
-      let img = images[current];
-      img.classList.add('visible');
-      setTimeout(() => {{
-        img.classList.remove('visible');
-        current++;
-        setTimeout(cycleImages, fadeDuration);
-      }}, visibleDuration);
-    }} else {{
-      const sunset = document.getElementById('img18');
-      setTimeout(() => {{
-        sunset.classList.add('visible');
-      }}, {sunset_duration * 1000});
-    }}
-  }}
+  function cycleImages() {
+    if (!animating || current >= images.length) return;
+    let img = images[current];
+    img.classList.add("visible");
+    cycleTimer = setTimeout(() => {
+      img.classList.remove("visible");
+      current++;
+      cycleImages();
+    }, visibleDuration);
+  }
+
+  function rewind() {
+    clearTimeout(cycleTimer);
+    images.forEach(img => img.classList.remove("visible"));
+    sunset.classList.remove("visible");
+    current = 0;
+    cycleImages();
+  }
+
+  function skip() {
+    if (current < images.length - 1) {
+      images[current].classList.remove("visible");
+      current++;
+      cycleImages();
+    } else {
+      sunset.classList.add("visible");
+    }
+  }
 
   cycleImages();
 </script>
