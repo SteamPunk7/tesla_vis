@@ -10,25 +10,33 @@
       padding: 0;
       background: black;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    canvas, .photo {
-      position: absolute;
+    canvas {
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      z-index: 0;
+      width: 100vw;
+      height: 100vh;
     }
     .photo {
+      position: absolute;
+      max-width: 50vw;
+      max-height: 50vh;
       opacity: 0;
       transition: opacity 2s ease-in-out;
       z-index: 1;
+    }
+    .visible {
+      opacity: 1 !important;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <!-- Images -->
   <img class="photo" id="img1" src="img1.jpg">
   <img class="photo" id="img2" src="img2.jpg">
   <img class="photo" id="img3" src="img3.jpg">
@@ -60,11 +68,11 @@
   resize();
 
   let t = 0;
-  const duration = 632;
+  const duration = 632;  // duration in seconds
   const endTime = Date.now() + duration * 1000;
 
   function drawTunnel() {
-    if (Date.now() > endTime * 1000) return;
+    if (Date.now() > endTime) return;
 
     const w = canvas.width;
     const h = canvas.height;
@@ -99,30 +107,29 @@
 
   drawTunnel();
 
-  const allIds = ["img1", "img2", "img3", "img4", "img5", "img6", "img7", "img8", "img9", "img10", "img11", "img12", "img13", "img14", "img15", "img16", "img17"];
-  const images = allIds.map(id => document.getElementById(id));
+  const imageIds = ["img1", "img2", "img3", "img4", "img5", "img6", "img7", "img8", "img9", "img10", "img11", "img12", "img13", "img14", "img15", "img16", "img17"];
+  const images = imageIds.map(id => document.getElementById(id));
   images.sort(() => Math.random() - 0.5);
 
   let current = 0;
-  let fadeDuration = 2000;
   let visibleDuration = 10000;
-  let totalDuration = 632 * 1000;
+  let fadeDuration = 2000;
+  let totalDuration = 632000;
 
   function cycleImages() {
     if (current < images.length) {
       let img = images[current];
-      img.style.opacity = 1;
+      img.classList.add('visible');
       setTimeout(() => {
-        img.style.opacity = 0;
+        img.classList.remove('visible');
         current++;
         setTimeout(cycleImages, fadeDuration);
       }, visibleDuration);
     } else {
-      const delay = totalDuration - 20000;
+      const sunset = document.getElementById('img18');
       setTimeout(() => {
-        const sunset = document.getElementById('img18');
-        sunset.style.opacity = 1;
-      }, delay);
+        sunset.classList.add('visible');
+      }, totalDuration - 20000);
     }
   }
 
