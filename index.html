@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Trippy Visualizer with Photos</title>
+  <title>Trippy Visualizer - Natural Size Images</title>
   <style>
     html, body {
       margin: 0;
@@ -11,69 +12,84 @@
       overflow: hidden;
     }
     canvas {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
+      width: 100vw;
+      height: 100vh;
       z-index: 0;
     }
     .photo {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 75vw;
-      height: auto;
-      max-height: 75vh;
       transform: translate(-50%, -50%);
+      max-width: 75%;
+      max-height: 75%;
       opacity: 0;
       transition: opacity 2s ease-in-out;
       z-index: 1;
     }
+    .visible {
+      opacity: 1 !important;
+    }
     .controls {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
+      bottom: 20px;
+      right: 20px;
       z-index: 10;
       color: white;
       font-family: sans-serif;
     }
-    .controls button {
-      margin-right: 5px;
+    .status-bar {
+      margin-top: 5px;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress {
+      height: 100%;
+      background: white;
+      width: 0%;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+
   <!-- Images -->
   <img class="photo" id="img1" src="img1.jpg">
-<img class="photo" id="img2" src="img2.jpg">
-<img class="photo" id="img3" src="img3.jpg">
-<img class="photo" id="img4" src="img4.jpg">
-<img class="photo" id="img5" src="img5.jpg">
-<img class="photo" id="img6" src="img6.jpg">
-<img class="photo" id="img7" src="img7.jpg">
-<img class="photo" id="img8" src="img8.jpg">
-<img class="photo" id="img9" src="img9.jpg">
-<img class="photo" id="img10" src="img10.jpg">
-<img class="photo" id="img11" src="img11.jpg">
-<img class="photo" id="img12" src="img12.jpg">
-<img class="photo" id="img13" src="img13.jpg">
-<img class="photo" id="img14" src="img14.jpg">
-<img class="photo" id="img15" src="img15.jpg">
-<img class="photo" id="img16" src="img16.jpg">
-<img class="photo" id="img17" src="img17.jpg">
-  <img class="photo" id="img18" src="sunset.jpg">
+  <img class="photo" id="img2" src="img2.jpg">
+  <img class="photo" id="img3" src="img3.jpg">
+  <img class="photo" id="img4" src="img4.jpg">
+  <img class="photo" id="img5" src="img5.jpg">
+  <img class="photo" id="img6" src="img6.jpg">
+  <img class="photo" id="img7" src="img7.jpg">
+  <img class="photo" id="img8" src="img8.jpg">
+  <img class="photo" id="img9" src="img9.jpg">
+  <img class="photo" id="img10" src="img10.jpg">
+  <img class="photo" id="img11" src="img11.jpg">
+  <img class="photo" id="img12" src="img12.jpg">
+  <img class="photo" id="img13" src="img13.jpg">
+  <img class="photo" id="img14" src="img14.jpg">
+  <img class="photo" id="img15" src="img15.jpg">
+  <img class="photo" id="img16" src="img16.jpg">
+  <img class="photo" id="img17" src="img17.jpg">
+  <img class="photo" id="img17" src="sunset.jpg">
 
   <div class="controls">
     <button onclick="rewind()">⏪</button>
-    <button onclick="togglePlayPause()">⏯️</button>
+    <button onclick="togglePlay()" id="toggleBtn">⏸️</button>
     <button onclick="forward()">⏩</button>
     <button onclick="toggleFullscreen()">⛶</button>
-    <div id="statusBar">0:00 / 10:32</div>
+    <div class="status-bar"><div class="progress" id="progressBar"></div></div>
   </div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -82,15 +98,20 @@
     resize();
 
     let t = 0;
+    const duration = 632; // 10 min 32 sec
+    const images = [];
+    for (let i = 1; i <= 17; i++) {
+      images.push(document.getElementById('img' + i));
+    }
+
+    const sunset = document.getElementById('img17');
+    let current = 0;
     let playing = true;
     let startTime = Date.now();
-    const duration = 632000;
+    let cycleTimer;
 
     function drawTunnel() {
-      if (!playing) {
-        requestAnimationFrame(drawTunnel);
-        return;
-      }
+      const now = Date.now();
       const w = canvas.width;
       const h = canvas.height;
       const imageData = ctx.createImageData(w, h);
@@ -102,10 +123,12 @@
           let dy = y - h / 2;
           let dist = Math.sqrt(dx * dx + dy * dy);
           let angle = Math.atan2(dy, dx);
+
           let swirl = Math.sin(dist * 0.05 - t) + Math.cos(angle * 6 + t * 0.3);
           let r = Math.floor(90 * (Math.sin(swirl + t) + 1));
           let g = Math.floor(90 * (Math.sin(swirl + t + 2) + 1));
           let b = Math.floor(90 * (Math.sin(swirl + t + 4) + 1));
+
           const index = (x + y * w) * 4;
           data[index] = r;
           data[index + 1] = g;
@@ -116,53 +139,53 @@
 
       ctx.putImageData(imageData, 0, 0);
       t += 0.03;
-      updateStatusBar();
-      requestAnimationFrame(drawTunnel);
+
+      if (playing) {
+        requestAnimationFrame(drawTunnel);
+      }
     }
-
-    drawTunnel();
-
-    const totalImages = 18;
-    const images = [];
-    for (let i = 1; i <= totalImages; i++) {
-      images.push(document.getElementById('img' + i));
-    }
-
-    let current = 0;
-    let fadeDuration = 2000;
-    let visibleDuration = 20000;
-    let intervalDuration = 15000;
 
     function cycleImages() {
-      if (current >= images.length) return;
-      let img = images[current];
-      img.style.opacity = 1;
+      if (current >= images.length - 1) {
+        // Last image is the sunset
+        sunset.classList.add("visible");
+        return;
+      }
 
-      setTimeout(() => {
-        img.style.opacity = 0;
+      const img = images[current];
+      img.classList.add("visible");
+      cycleTimer = setTimeout(() => {
+        img.classList.remove("visible");
         current++;
-        setTimeout(cycleImages, intervalDuration);
-      }, visibleDuration);
+        cycleTimer = setTimeout(cycleImages, 15000); // 15s trippy tunnel gap
+      }, 20000); // 20s image display
     }
 
-    setTimeout(cycleImages, 1000);
-
-    function togglePlayPause() {
+    function togglePlay() {
       playing = !playing;
+      document.getElementById('toggleBtn').innerText = playing ? '⏸️' : '▶️';
       if (playing) {
-        startTime = Date.now() - t * 1000;
         drawTunnel();
+        cycleImages();
+      } else {
+        clearTimeout(cycleTimer);
       }
     }
 
     function rewind() {
-      t = Math.max(0, t - 5);
-      startTime = Date.now() - t * 1000;
+      if (current > 0) {
+        images[current].classList.remove("visible");
+        current -= 1;
+        cycleImages();
+      }
     }
 
     function forward() {
-      t = Math.min(duration / 1000, t + 5);
-      startTime = Date.now() - t * 1000;
+      if (current < images.length - 2) {
+        images[current].classList.remove("visible");
+        current += 1;
+        cycleImages();
+      }
     }
 
     function toggleFullscreen() {
@@ -173,12 +196,18 @@
       }
     }
 
-    function updateStatusBar() {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      document.getElementById("statusBar").textContent = `${minutes}:${seconds.toString().padStart(2, '0')} / 10:32`;
+    function updateProgress() {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const percent = Math.min((elapsed / duration) * 100, 100);
+      document.getElementById('progressBar').style.width = percent + '%';
+      if (elapsed < duration && playing) {
+        requestAnimationFrame(updateProgress);
+      }
     }
+
+    drawTunnel();
+    cycleImages();
+    updateProgress();
   </script>
 </body>
 </html>
