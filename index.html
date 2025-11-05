@@ -131,7 +131,9 @@
     document.getElementById("playLabel").innerText = animating ? "Pause" : "Play";
     if (animating) {
       drawTunnel();
-      cycleImages();
+              current++;
+        cycleImages();
+      }, gapDuration);
     }
   }
 
@@ -150,6 +152,7 @@
   let current = 0;
   let fadeDuration = 2000;
   let visibleDuration = 20000;
+  let gapDuration = 15000;
   let cycleTimer;
 
   function cycleImages() {
@@ -158,8 +161,12 @@
     img.classList.add("visible");
     cycleTimer = setTimeout(() => {
       img.classList.remove("visible");
+      setTimeout(() => {
+      img.classList.remove("visible");
       current++;
-      cycleImages();
+              current++;
+        cycleImages();
+      }, gapDuration);
     }, visibleDuration);
   }
 
@@ -168,20 +175,26 @@
     images.forEach(img => img.classList.remove("visible"));
     sunset.classList.remove("visible");
     current = 0;
-    cycleImages();
+            current++;
+        cycleImages();
+      }, gapDuration);
   }
 
   function skip() {
     if (current < images.length - 1) {
       images[current].classList.remove("visible");
       current++;
-      cycleImages();
+              current++;
+        cycleImages();
+      }, gapDuration);
     } else {
       sunset.classList.add("visible");
     }
   }
 
-  cycleImages();
+          current++;
+        cycleImages();
+      }, gapDuration);
 </script>
 </body>
 </html>
