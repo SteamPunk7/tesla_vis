@@ -48,7 +48,21 @@
       font-size: 16px;
       margin: 0 5px;
     }
-  </style>
+  
+    #statusBar {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      color: white;
+      font-family: monospace;
+      background: rgba(0,0,0,0.4);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 20;
+    }
+    .visible { opacity: 1 !important; }
+    
 </head>
 <body>
   <canvas id="canvas"></canvas>
@@ -80,7 +94,8 @@
     <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
   </div>
 
-<script>
+<div id="statusBar">00:00 / 10:32</div>
+  <script>
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -124,16 +139,42 @@
     requestAnimationFrame(drawTunnel);
   }
 
-  drawTunnel();
+  
+    drawTunnel();
+
+    const statusBar = document.getElementById('statusBar');
+    function updateTime() {
+      const elapsed = Math.min((Date.now() - startTime) / 1000, totalDuration / 1000);
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = Math.floor(elapsed % 60).toString().padStart(2, '0');
+      statusBar.textContent = `${minutes}:${seconds} / 10:32`;
+      requestAnimationFrame(updateTime);
+    }
+
+    const startTime = Date.now();
+    updateTime();
+    
 
   function togglePlay() {
     animating = !animating;
     document.getElementById("playLabel").innerText = animating ? "Pause" : "Play";
     if (animating) {
-      drawTunnel();
-              current++;
-        cycleImages();
-      }, gapDuration);
+      
+    drawTunnel();
+
+    const statusBar = document.getElementById('statusBar');
+    function updateTime() {
+      const elapsed = Math.min((Date.now() - startTime) / 1000, totalDuration / 1000);
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = Math.floor(elapsed % 60).toString().padStart(2, '0');
+      statusBar.textContent = `${minutes}:${seconds} / 10:32`;
+      requestAnimationFrame(updateTime);
+    }
+
+    const startTime = Date.now();
+    updateTime();
+    
+      cycleImages();
     }
   }
 
@@ -152,7 +193,6 @@
   let current = 0;
   let fadeDuration = 2000;
   let visibleDuration = 20000;
-  let gapDuration = 15000;
   let cycleTimer;
 
   function cycleImages() {
@@ -161,12 +201,8 @@
     img.classList.add("visible");
     cycleTimer = setTimeout(() => {
       img.classList.remove("visible");
-      setTimeout(() => {
-      img.classList.remove("visible");
       current++;
-              current++;
-        cycleImages();
-      }, gapDuration);
+      cycleImages();
     }, visibleDuration);
   }
 
@@ -175,26 +211,20 @@
     images.forEach(img => img.classList.remove("visible"));
     sunset.classList.remove("visible");
     current = 0;
-            current++;
-        cycleImages();
-      }, gapDuration);
+    cycleImages();
   }
 
   function skip() {
     if (current < images.length - 1) {
       images[current].classList.remove("visible");
       current++;
-              current++;
-        cycleImages();
-      }, gapDuration);
+      cycleImages();
     } else {
       sunset.classList.add("visible");
     }
   }
 
-          current++;
-        cycleImages();
-      }, gapDuration);
+  cycleImages();
 </script>
 </body>
 </html>
