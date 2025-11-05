@@ -1,230 +1,184 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Trippy Visualizer with Controls</title>
+  <title>Trippy Visualizer with Photos</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       background: black;
       overflow: hidden;
-      width: 100%;
-      height: 100%;
     }
     canvas {
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
       z-index: 0;
-      width: 100vw;
-      height: 100vh;
     }
     .photo {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
-      max-width: 75vw;
+      width: 75vw;
+      height: auto;
       max-height: 75vh;
+      transform: translate(-50%, -50%);
       opacity: 0;
       transition: opacity 2s ease-in-out;
       z-index: 1;
     }
-    .visible {
-      opacity: 1 !important;
-    }
-    #controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 2;
-      background: rgba(0,0,0,0.5);
-      padding: 10px;
-      border-radius: 8px;
-    }
-    button {
-      font-size: 16px;
-      margin: 0 5px;
-    }
-  
-    #statusBar {
+    .controls {
       position: absolute;
       bottom: 10px;
       right: 10px;
+      z-index: 10;
       color: white;
-      font-family: monospace;
-      background: rgba(0,0,0,0.4);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 20;
+      font-family: sans-serif;
     }
-    .visible { opacity: 1 !important; }
-    
+    .controls button {
+      margin-right: 5px;
+    }
+  </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <!-- Image Elements -->
+  <!-- Images -->
   <img class="photo" id="img1" src="img1.jpg">
-  <img class="photo" id="img2" src="img2.jpg">
-  <img class="photo" id="img3" src="img3.jpg">
-  <img class="photo" id="img4" src="img4.jpg">
-  <img class="photo" id="img5" src="img5.jpg">
-  <img class="photo" id="img6" src="img6.jpg">
-  <img class="photo" id="img7" src="img7.jpg">
-  <img class="photo" id="img8" src="img8.jpg">
-  <img class="photo" id="img9" src="img9.jpg">
-  <img class="photo" id="img10" src="img10.jpg">
-  <img class="photo" id="img11" src="img11.jpg">
-  <img class="photo" id="img12" src="img12.jpg">
-  <img class="photo" id="img13" src="img13.jpg">
-  <img class="photo" id="img14" src="img14.jpg">
-  <img class="photo" id="img15" src="img15.jpg">
-  <img class="photo" id="img16" src="img16.jpg">
-  <img class="photo" id="img17" src="img17.jpg">
+<img class="photo" id="img2" src="img2.jpg">
+<img class="photo" id="img3" src="img3.jpg">
+<img class="photo" id="img4" src="img4.jpg">
+<img class="photo" id="img5" src="img5.jpg">
+<img class="photo" id="img6" src="img6.jpg">
+<img class="photo" id="img7" src="img7.jpg">
+<img class="photo" id="img8" src="img8.jpg">
+<img class="photo" id="img9" src="img9.jpg">
+<img class="photo" id="img10" src="img10.jpg">
+<img class="photo" id="img11" src="img11.jpg">
+<img class="photo" id="img12" src="img12.jpg">
+<img class="photo" id="img13" src="img13.jpg">
+<img class="photo" id="img14" src="img14.jpg">
+<img class="photo" id="img15" src="img15.jpg">
+<img class="photo" id="img16" src="img16.jpg">
+<img class="photo" id="img17" src="img17.jpg">
   <img class="photo" id="img18" src="sunset.jpg">
 
-  <!-- Control Buttons -->
-  <div id="controls">
-    <button onclick="togglePlay()"><span id="playLabel">Pause</span></button>
-    <button onclick="rewind()">⏮ Rewind</button>
-    <button onclick="skip()">⏭ Skip</button>
-    <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+  <div class="controls">
+    <button onclick="rewind()">⏪</button>
+    <button onclick="togglePlayPause()">⏯️</button>
+    <button onclick="forward()">⏩</button>
+    <button onclick="toggleFullscreen()">⛶</button>
+    <div id="statusBar">0:00 / 10:32</div>
   </div>
 
-<div id="statusBar">00:00 / 10:32</div>
   <script>
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
+    let t = 0;
+    let playing = true;
+    let startTime = Date.now();
+    const duration = 632000;
 
-  let t = 0;
-  let animating = true;
+    function drawTunnel() {
+      if (!playing) {
+        requestAnimationFrame(drawTunnel);
+        return;
+      }
+      const w = canvas.width;
+      const h = canvas.height;
+      const imageData = ctx.createImageData(w, h);
+      const data = imageData.data;
 
-  function drawTunnel() {
-    if (!animating) return;
-    const w = canvas.width;
-    const h = canvas.height;
-    const imageData = ctx.createImageData(w, h);
-    const data = imageData.data;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let dx = x - w / 2;
+          let dy = y - h / 2;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          let angle = Math.atan2(dy, dx);
+          let swirl = Math.sin(dist * 0.05 - t) + Math.cos(angle * 6 + t * 0.3);
+          let r = Math.floor(90 * (Math.sin(swirl + t) + 1));
+          let g = Math.floor(90 * (Math.sin(swirl + t + 2) + 1));
+          let b = Math.floor(90 * (Math.sin(swirl + t + 4) + 1));
+          const index = (x + y * w) * 4;
+          data[index] = r;
+          data[index + 1] = g;
+          data[index + 2] = b;
+          data[index + 3] = 255;
+        }
+      }
 
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        let dx = x - w / 2;
-        let dy = y - h / 2;
-        let dist = Math.sqrt(dx * dx + dy * dy);
-        let angle = Math.atan2(dy, dx);
-        let swirl = Math.sin(dist * 0.05 - t) + Math.cos(angle * 6 + t * 0.3);
-        let r = Math.floor(90 * (Math.sin(swirl + t) + 1));
-        let g = Math.floor(90 * (Math.sin(swirl + t + 2) + 1));
-        let b = Math.floor(90 * (Math.sin(swirl + t + 4) + 1));
-        const index = (x + y * w) * 4;
-        data[index] = r;
-        data[index + 1] = g;
-        data[index + 2] = b;
-        data[index + 3] = 255;
+      ctx.putImageData(imageData, 0, 0);
+      t += 0.03;
+      updateStatusBar();
+      requestAnimationFrame(drawTunnel);
+    }
+
+    drawTunnel();
+
+    const totalImages = 18;
+    const images = [];
+    for (let i = 1; i <= totalImages; i++) {
+      images.push(document.getElementById('img' + i));
+    }
+
+    let current = 0;
+    let fadeDuration = 2000;
+    let visibleDuration = 20000;
+    let intervalDuration = 15000;
+
+    function cycleImages() {
+      if (current >= images.length) return;
+      let img = images[current];
+      img.style.opacity = 1;
+
+      setTimeout(() => {
+        img.style.opacity = 0;
+        current++;
+        setTimeout(cycleImages, intervalDuration);
+      }, visibleDuration);
+    }
+
+    setTimeout(cycleImages, 1000);
+
+    function togglePlayPause() {
+      playing = !playing;
+      if (playing) {
+        startTime = Date.now() - t * 1000;
+        drawTunnel();
       }
     }
 
-    ctx.putImageData(imageData, 0, 0);
-    t += 0.03;
-    requestAnimationFrame(drawTunnel);
-  }
-
-  
-    drawTunnel();
-
-    const statusBar = document.getElementById('statusBar');
-    function updateTime() {
-      const elapsed = Math.min((Date.now() - startTime) / 1000, totalDuration / 1000);
-      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      const seconds = Math.floor(elapsed % 60).toString().padStart(2, '0');
-      statusBar.textContent = `${minutes}:${seconds} / 10:32`;
-      requestAnimationFrame(updateTime);
+    function rewind() {
+      t = Math.max(0, t - 5);
+      startTime = Date.now() - t * 1000;
     }
 
-    const startTime = Date.now();
-    updateTime();
-    
-
-  function togglePlay() {
-    animating = !animating;
-    document.getElementById("playLabel").innerText = animating ? "Pause" : "Play";
-    if (animating) {
-      
-    drawTunnel();
-
-    const statusBar = document.getElementById('statusBar');
-    function updateTime() {
-      const elapsed = Math.min((Date.now() - startTime) / 1000, totalDuration / 1000);
-      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      const seconds = Math.floor(elapsed % 60).toString().padStart(2, '0');
-      statusBar.textContent = `${minutes}:${seconds} / 10:32`;
-      requestAnimationFrame(updateTime);
+    function forward() {
+      t = Math.min(duration / 1000, t + 5);
+      startTime = Date.now() - t * 1000;
     }
 
-    const startTime = Date.now();
-    updateTime();
-    
-      cycleImages();
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
     }
-  }
 
-  function toggleFullscreen() {
-    const elem = document.documentElement;
-    if (!document.fullscreenElement) {
-      elem.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
-    } else {
-      document.exitFullscreen();
+    function updateStatusBar() {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      document.getElementById("statusBar").textContent = `${minutes}:${seconds.toString().padStart(2, '0')} / 10:32`;
     }
-  }
-
-  const images = [...Array(17).keys()].map(i => document.getElementById(`img${i + 1}`));
-  images.sort(() => Math.random() - 0.5);
-  let sunset = document.getElementById("img18");
-  let current = 0;
-  let fadeDuration = 2000;
-  let visibleDuration = 20000;
-  let cycleTimer;
-
-  function cycleImages() {
-    if (!animating || current >= images.length) return;
-    let img = images[current];
-    img.classList.add("visible");
-    cycleTimer = setTimeout(() => {
-      img.classList.remove("visible");
-      current++;
-      cycleImages();
-    }, visibleDuration);
-  }
-
-  function rewind() {
-    clearTimeout(cycleTimer);
-    images.forEach(img => img.classList.remove("visible"));
-    sunset.classList.remove("visible");
-    current = 0;
-    cycleImages();
-  }
-
-  function skip() {
-    if (current < images.length - 1) {
-      images[current].classList.remove("visible");
-      current++;
-      cycleImages();
-    } else {
-      sunset.classList.add("visible");
-    }
-  }
-
-  cycleImages();
-</script>
+  </script>
 </body>
 </html>
