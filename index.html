@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trippy Visualizer</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
+    }
+    canvas, .photo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo {
+      opacity: 0;
+      transition: opacity 2s ease-in-out;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <!-- Images -->
+  <img class="photo" id="img1" src="img1.jpg">
+  <img class="photo" id="img2" src="img2.jpg">
+  <img class="photo" id="img3" src="img3.jpg">
+  <img class="photo" id="img4" src="img4.jpg">
+  <img class="photo" id="img5" src="img5.jpg">
+  <img class="photo" id="img6" src="img6.jpg">
+  <img class="photo" id="img7" src="img7.jpg">
+  <img class="photo" id="img8" src="img8.jpg">
+  <img class="photo" id="img9" src="img9.jpg">
+  <img class="photo" id="img10" src="img10.jpg">
+  <img class="photo" id="img11" src="img11.jpg">
+  <img class="photo" id="img12" src="img12.jpg">
+  <img class="photo" id="img13" src="img13.jpg">
+  <img class="photo" id="img14" src="img14.jpg">
+  <img class="photo" id="img15" src="img15.jpg">
+  <img class="photo" id="img16" src="img16.jpg">
+  <img class="photo" id="img17" src="img17.jpg">
+  <img class="photo" id="img18" src="sunset.jpg">
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let t = 0;
+  const duration = 632;
+  const endTime = Date.now() + duration * 1000;
+
+  function drawTunnel() {
+    if (Date.now() > endTime * 1000) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const imageData = ctx.createImageData(w, h);
+    const data = imageData.data;
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let dx = x - w / 2;
+        let dy = y - h / 2;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        let angle = Math.atan2(dy, dx);
+
+        let swirl = Math.sin(dist * 0.05 - t) + Math.cos(angle * 6 + t * 0.3);
+
+        let r = Math.floor(90 * (Math.sin(swirl + t) + 1));
+        let g = Math.floor(90 * (Math.sin(swirl + t + 2) + 1));
+        let b = Math.floor(90 * (Math.sin(swirl + t + 4) + 1));
+
+        const index = (x + y * w) * 4;
+        data[index] = r;
+        data[index + 1] = g;
+        data[index + 2] = b;
+        data[index + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    t += 0.03;
+    requestAnimationFrame(drawTunnel);
+  }
+
+  drawTunnel();
+
+  const allIds = ["img1", "img2", "img3", "img4", "img5", "img6", "img7", "img8", "img9", "img10", "img11", "img12", "img13", "img14", "img15", "img16", "img17"];
+  const images = allIds.map(id => document.getElementById(id));
+  images.sort(() => Math.random() - 0.5);
+
+  let current = 0;
+  let fadeDuration = 2000;
+  let visibleDuration = 10000;
+  let totalDuration = 632 * 1000;
+
+  function cycleImages() {
+    if (current < images.length) {
+      let img = images[current];
+      img.style.opacity = 1;
+      setTimeout(() => {
+        img.style.opacity = 0;
+        current++;
+        setTimeout(cycleImages, fadeDuration);
+      }, visibleDuration);
+    } else {
+      const delay = totalDuration - 20000;
+      setTimeout(() => {
+        const sunset = document.getElementById('img18');
+        sunset.style.opacity = 1;
+      }, delay);
+    }
+  }
+
+  cycleImages();
+</script>
+</body>
+</html>
